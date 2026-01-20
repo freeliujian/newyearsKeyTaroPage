@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { View, Text } from "@tarojs/components";
+import { View, Text, Input } from "@tarojs/components";
 import { Button, TextArea } from "@nutui/nutui-react-taro";
 import Taro, { request } from "@tarojs/taro";
+import { Refresh } from "@nutui/icons-react-taro";
 import "./index.scss";
 
 function safeParseMixedFormat(str: string) {
@@ -87,7 +88,18 @@ function NewYearFortune() {
       path: "/pages/index/index",
     };
   });
+  const handleRandomHint = () => {
+    if (QUICK_HINTS && QUICK_HINTS.length > 0) {
+      const randomIndex = Math.floor(Math.random() * QUICK_HINTS.length);
 
+      setInputText(QUICK_HINTS[randomIndex]);
+    } else {
+      Taro.showToast({
+        title: "正在加载灵感...",
+        icon: "none",
+      });
+    }
+  };
   const regenerateFortune = () => {
     setShowResult(false);
     setInputText("");
@@ -132,185 +144,136 @@ function NewYearFortune() {
     }
   };
 
-  return (
-    <View className="new-year-fortune-wrapper">
-      {loading ? null : (
-        <>
-          <View className="background-decorations">
-            <View className="lantern left-lantern"></View>
-            <View className="lantern right-lantern"></View>
-            <View className="firework firework-1"></View>
-            <View className="firework firework-2"></View>
+  const newYearsFortune = () => {
+    return (
+      <>
+        <View className="layer"> </View>
+        <View className="content-area"></View>
+        <View className="footer"></View>
+        <View className="gold-card">
+          <View className="top-cutter" onClick={handleRandomHint}>
+            <TextArea
+              className="wish-input"
+              placeholder={`例如:我希望${currentYear}年事业进步，家人健康`}
+              value={inputText}
+              onChange={(value) => setInputText(value)}
+              maxLength={200}
+              rows={4}
+              autoHeight
+            />
+            <View className="action-icon">
+              <Refresh color="#999" size={16} />
+            </View>
           </View>
-          <View className="content">
-            <View className="couplets-section">
-              <View className="couplet left-couplet">
-                <View className="couplet-border">
-                  <Text className="couplet-title">辞旧</Text>
-                  <Text className="couplet-content">
-                    挥别{previousYear}遗憾
+          <Button
+            className="action-btn"
+            type="primary"
+            loading={isGenerating}
+            onClick={fetchFortune}
+          >
+            {isGenerating ? "生成中..." : `生成我的${currentYear}新年签`}
+          </Button>
+        </View>
+      </>
+    );
+  };
+
+  const messageGeneration = () => {
+    const tags = fortuneResult?.advice.split(/[，。]/).filter(Boolean);
+    return (
+      <>
+        <View className="result-section">
+          <View className="top-title">{currentYear}年专属运势</View>
+          <View className="fortune-content">{fortuneResult?.title}</View>
+          <View className="result-card">
+            <View className="info-grid">
+              <View className="grid-item">
+                <Text className="label">幸运色</Text>
+                <View className="value-row">
+                  <View
+                    className="color-block"
+                    style={{
+                      backgroundColor:
+                        fortuneResult?.luckyColor.hex || "#D90000",
+                    }}
+                  ></View>
+
+                  <Text className="link-text">
+                    {fortuneResult?.luckyColor.name}
                   </Text>
-                  <Text className="couplet-content">往事皆清零</Text>
                 </View>
               </View>
 
-              <View className="couplet-center">
-                <Text className="main-title">新年签</Text>
-                <Text className="year-text">{currentYear}</Text>
-                <Text className="sub-title">预见你的新年运势</Text>
+              <View className="grid-item">
+                <Text className="label">幸运数字</Text>
+                <Text className="value-text">{fortuneResult?.luckyNumber}</Text>
               </View>
 
-              <View className="couplet right-couplet">
-                <View className="couplet-border">
-                  <Text className="couplet-title">迎新</Text>
-                  <Text className="couplet-content">喜迎{currentYear}期待</Text>
-                  <Text className="couplet-content">未来皆可期</Text>
-                </View>
+              <View className="grid-item">
+                <Text className="label">吉利方位</Text>
+                <Text className="value-text">
+                  {fortuneResult?.luckyDirection}
+                </Text>
               </View>
             </View>
-
-            {!showResult ? (
-              <View className="input-section">
-                <View className="input-container">
-                  <Text className="section-title">写下你的新年愿望</Text>
-                  <TextArea
-                    className="wish-input"
-                    placeholder={`例如：我希望${currentYear}年事业进步，家人健康，学习新技能...`}
-                    value={inputText}
-                    onChange={(value) => setInputText(value)}
-                    maxLength={200}
-                    rows={4}
-                    autoHeight
-                  />
-
-                  <View className="quick-hints">
-                    <Text className="hints-title">输入你的心中寄语：</Text>
-                    <View className="hints-container">
-                      {QUICK_HINTS.map((hint, index) => (
-                        <View
-                          key={index}
-                          className="hint-tag"
-                          onClick={() => handleHintClick(hint)}
-                        >
-                          <Text className="hint-text">{hint}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
+            <View className="fortune-list">
+              {fortuneResult?.areas?.map((item, index) => (
+                <View className="fortune-item" key={index}>
+                  <Text className="item-label">{item.name}</Text>
+                  <Text className="star-text">{item.stars}</Text>
                 </View>
-                <div className="button-wrapper">
-                  <Button
-                    className="generate-btn"
-                    type="primary"
-                    loading={isGenerating}
-                    onClick={fetchFortune}
-                  >
-                    {isGenerating
-                      ? "生成中..."
-                      : `生成我的${currentYear}新年签`}
-                  </Button>
-                </div>
-              </View>
-            ) : (
-              <View className="result-section">
-                <View className="fortune-card">
-                  <View className="fortune-header">
-                    <Text className="fortune-title">
-                      {fortuneResult?.title}
-                    </Text>
-                    <Text className="fortune-date">
-                      {currentYear}年专属运势
-                    </Text>
-                  </View>
-                  <View className="fortune-content">
-                    <Text className="fortune-text">
-                      {fortuneResult?.content}
-                    </Text>
-                    <View className="fortune-details">
-                      <View className="detail-item">
-                        <Text className="detail-label">幸运色</Text>
-                        <View className="detail-value">
-                          <View
-                            className="color-box"
-                            style={{
-                              backgroundColor: fortuneResult?.luckyColor.hex,
-                            }}
-                          />
-                          <Text>{fortuneResult?.luckyColor.name}</Text>
-                        </View>
-                      </View>
-
-                      <View className="detail-item">
-                        <Text className="detail-label">幸运数字</Text>
-                        <Text className="detail-number">
-                          {fortuneResult?.luckyNumber}
-                        </Text>
-                      </View>
-
-                      <View className="detail-item">
-                        <Text className="detail-label">吉利方位</Text>
-                        <Text className="detail-value">
-                          {fortuneResult?.luckyDirection}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View className="fortune-areas">
-                      {fortuneResult?.areas.map((area: any, index: number) => (
-                        <View key={index} className="area-item">
-                          <Text className="area-name">{area.name}</Text>
-                          <Text className="area-stars">{area.stars}</Text>
-                        </View>
-                      ))}
-                    </View>
-
-                    <View className="advice-section">
-                      <Text className="advice-label">新年建议：</Text>
-                      <Text className="advice-text">
-                        {fortuneResult?.advice}
-                      </Text>
-                    </View>
-                    <View className="advice-section" style={{ marginTop: 10 }}>
-                      <Text className="advice-label" style={{fontSize: 14}}>新年寄语：</Text>
-                      <Text className="advice-text" style={{fontSize: 14}}>
-                        {fortuneResult?.copyContent}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View className="action-buttons">
-                    <Button
-                      className="action-btn share-btn"
-                      type="primary"
-                      openType="share"
-                    >
-                      分享好运
-                    </Button>
-                    <Button
-                      className="action-btn save-btn"
-                      onClick={saveToAlbum}
-                    >
-                      保存寄语
-                    </Button>
-                    <Button
-                      className="action-btn regenerate-btn"
-                      type="default"
-                      onClick={regenerateFortune}
-                    >
-                      重新生成
-                    </Button>
-                  </View>
-                </View>
-
-                <View className="fortune-note">
-                  <Text>本结果由AI生成，仅供娱乐参考</Text>
-                  <Text>愿您{currentYear}年心想事成，万事如意！</Text>
-                </View>
-              </View>
-            )}
+              ))}
+            </View>
           </View>
-        </>
-      )}
+          <View className="advice-card">
+            <View className="card-header">
+              <Text className="title">新年建议：</Text>
+            </View>
+
+            <View className="tags-wrapper">
+              {tags.map((item, index) => (
+                <View className="tag-pill" key={index}>
+                  <Text className="tag-text">{item}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+          <View className="text-card-container">
+            <View className="text-body">
+              <Text className="inline-title">新年建议：</Text>
+              <Text className="inline-content">
+                {fortuneResult?.copyContent}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <View className="gold">
+          <View className="button-group">
+            <Button className=" btn-share" type="primary" openType="share">
+              分享好运
+            </Button>
+            <Button className=" btn-save" type="default" onClick={saveToAlbum}>
+              保存寄语
+            </Button>
+            <Button
+              className="again-btn"
+              type="default"
+              onClick={regenerateFortune}
+            >
+              重新生成
+            </Button>
+            <View className="tip">
+              本结果由AI生成,仅供娱乐参考愿您2026年心想事成,万事如意!
+            </View>
+          </View>
+        </View>
+      </>
+    );
+  };
+
+  return (
+    <View className="card-wrapper">
+      {!showResult ? newYearsFortune() : messageGeneration()}
     </View>
   );
 }

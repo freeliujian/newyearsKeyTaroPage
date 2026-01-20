@@ -44,6 +44,10 @@
     "ignore": [],
     "include": []
   },
-  "editorSetting": {},
-  "libVersion": "3.9.3"
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  },
+  "libVersion": "3.9.3",
+  "srcMiniprogramRoot": "dist/"
 }
