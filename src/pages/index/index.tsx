@@ -36,7 +36,7 @@ function NewYearFortune() {
   useEffect(() => {
     setLoading(true);
     request({
-      url: "http://123.57.67.54:3000/api/thoughtHeart",
+      url: "https://hello.daibot.cn/api/thoughtHeart",
       method: "GET",
     })
       .then((res) => {
@@ -60,7 +60,7 @@ function NewYearFortune() {
     try {
       setIsGenerating(true);
       const response = await request({
-        url: "http://123.57.67.54:3000/api/fortune",
+        url: "https://hello.daibot.cn/api/fortune",
         method: "POST",
         header: {
           "Content-Type": "application/json",
