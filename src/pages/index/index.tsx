@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Input } from "@tarojs/components";
+import { View, Text } from "@tarojs/components";
 import { Button, TextArea } from "@nutui/nutui-react-taro";
 import Taro, { request } from "@tarojs/taro";
 import { Refresh } from "@nutui/icons-react-taro";
@@ -49,10 +49,6 @@ function NewYearFortune() {
       });
   }, []);
 
-  const handleHintClick = (hint: string) => {
-    setInputText(hint);
-  };
-
   const fetchFortune = async () => {
     if (!inputText.trim()) {
       return;
@@ -72,7 +68,6 @@ function NewYearFortune() {
       });
 
       const data = safeParseMixedFormat(response.data.message);
-      console.log(data);
       setFortuneResult(data);
       setShowResult(true);
     } catch (err) {

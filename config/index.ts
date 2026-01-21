@@ -25,10 +25,15 @@ export default defineConfig<"webpack5">(async (merge, { command, mode }) => {
       options: {},
     },
     framework: "react",
-    compiler: {
+      compiler: {
       type: "webpack5",
       prebundle: {
         enable: false,
+        force: true,
+        exclude: [
+          "@nutui/nutui-react-taro",
+          "@nutui/icons-react-taro",
+        ],
       },
     },
     cache: {
@@ -52,6 +57,29 @@ export default defineConfig<"webpack5">(async (merge, { command, mode }) => {
       },
       webpackChain(chain) {
         chain.resolve.plugin("tsconfig-paths").use(TsconfigPathsPlugin);
+        if (process.env.NODE_ENV !== "development") {
+          chain.merge({
+            plugin: {
+              install: {
+                plugin: require("terser-webpack-plugin"),
+                args: [
+                  {
+                    terserOptions: {
+                      compress: true, // 默认使用terser压缩
+                      // mangle: false,
+                      keep_classnames: true, // 不改变class名称
+                      keep_fnames: true, // 不改变函数名称
+                      output: {
+                        comments: false,
+                      },
+                    },
+                    extractComments: false,
+                  },
+                ],
+              },
+            },
+          });
+        }
       },
     },
     alias: {
